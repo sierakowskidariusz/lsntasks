@@ -10,7 +10,9 @@ import java.util.stream.Stream;
 
 public class Task3 {
 
-    private static final String ERROR_PATH_DATA_FILE = "Please provide the path to the data file";
+    private static final String ERROR_NO_PATH_DATA_FILE = "Please provide the path to the data file";
+    private static final String ERROR_INCORRECT_PATH_DATA_FILE = "Privided path to data file are incorrect";
+    private static final String ERROR_NO_ACCESS_DATA_FILE = "Can not read file";
 
     private static int graphGenerator = 0;
 
@@ -26,12 +28,16 @@ public class Task3 {
          * from the smallest to the largest
          */
         if(args.length != 1 || args[0].length() == 0) {
-            System.out.println(ERROR_PATH_DATA_FILE);
+            System.out.println(ERROR_NO_PATH_DATA_FILE);
             return;
         }
         File dataFile = new File(args[0]);
+        if( ! dataFile.exists() ) {
+            System.out.println(ERROR_INCORRECT_PATH_DATA_FILE+": " + args[0]);
+            return;
+        }
         if( ! dataFile.canRead() ) {
-            System.out.println(ERROR_PATH_DATA_FILE);
+            System.out.println(ERROR_NO_ACCESS_DATA_FILE+": " + args[0]);
             return;
         }
         final Pattern lineFilter = Pattern.compile("-?\\d+ -?\\d+");
