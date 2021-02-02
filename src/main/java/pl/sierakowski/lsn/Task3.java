@@ -3,8 +3,8 @@ package pl.sierakowski.lsn;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -13,8 +13,6 @@ public class Task3 {
     private static final String ERROR_NO_PATH_DATA_FILE = "Please provide the path to the data file";
     private static final String ERROR_INCORRECT_PATH_DATA_FILE = "Privided path to data file are incorrect";
     private static final String ERROR_NO_ACCESS_DATA_FILE = "Can not read file";
-
-    private static int graphGenerator = 0;
 
     public static void main(String[] args) {
         /*
@@ -40,8 +38,11 @@ public class Task3 {
             System.out.println(ERROR_NO_ACCESS_DATA_FILE+": " + args[0]);
             return;
         }
+
         final Pattern lineFilter = Pattern.compile("-?\\d+ -?\\d+");
-        final Map<Integer,Integer> graphs = new HashMap<>();
+        final Map<Integer, Set<Integer>> graphs = new HashMap<>();
+        final AtomicInteger keyGenerator = new AtomicInteger(1);
+
         try(Stream<String> stream = Files.lines(dataFile.toPath())) {
             stream
                 .filter(line -> lineFilter.matcher(line).matches())
@@ -49,37 +50,34 @@ public class Task3 {
                     String[] numbers = line.split(" ");
                     int number1 = Integer.parseInt(numbers[0]);
                     int number2 = Integer.parseInt(numbers[1]);
-                    if( graphs.containsKey(number1) ) {
-                        int masterGraph = graphs.get(number1);
-                        if(graphs.containsKey(number2)) {
-                            // change graph ID in all nodes of graph with number2
-                            int slaveGraph = graphs.get(number2);
-                            for (Map.Entry<Integer, Integer> entry : graphs.entrySet()) {
-                                if (entry.getValue().equals(slaveGraph)) {
-                                    entry.setValue(masterGraph);
-                                }
-                            }
-                        } else {
-                            graphs.put(number2,masterGraph);
+                    int graphOfNumber1 = 0;
+                    int graphOfNumber2 = 0;
+                    for(Map.Entry<Integer,Set<Integer>> graph: graphs.entrySet()) {
+                        if(graphOfNumber1 == 0 && graph.getValue().contains(number1)) {
+                            graphOfNumber1 = graph.getKey();
                         }
+                        if(graphOfNumber2 == 0 && graph.getValue().contains(number2)) {
+                            graphOfNumber2 = graph.getKey();
+                        }
+                        if(graphOfNumber1 != 0 && graphOfNumber2 != 0) {
+                            break;
+                        }
+                    }
+                    if(graphOfNumber1 == 0 && graphOfNumber2 == 0) {
+                        graphs.put(keyGenerator.getAndIncrement(),new HashSet<>(Arrays.asList(number1,number2)));
+                    } else if(graphOfNumber1 == 0) {
+                        graphs.get(graphOfNumber2).add(number1);
+                    } else if(graphOfNumber2 == 0) {
+                        graphs.get(graphOfNumber1).add(number2);
                     } else {
-                        if( graphs.containsKey(number2) ) {
-                            graphs.put(number1,graphs.get(number2));
-                        } else {
-                            Integer id = graphGenerator++;
-                            graphs.put(number1,id);
-                            graphs.put(number2,id);
-                        }
+                        graphs.get(graphOfNumber1).addAll(graphs.get(graphOfNumber2));
+                        graphs.remove(graphOfNumber2);
                     }
                 });
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        if(graphs.isEmpty()) {
-            System.out.println("-");
-            return;
-        }
-        System.out.println(graphs.values().stream().distinct().count());
+        System.out.println(graphs.keySet().size());
     }
 
 }
