@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -40,8 +39,7 @@ public class Task3 {
         }
 
         final Pattern lineFilter = Pattern.compile("-?\\d+ -?\\d+");
-        final Map<Integer, Set<Integer>> graphs = new HashMap<>();
-        final AtomicInteger keyGenerator = new AtomicInteger(1);
+        final List<Set<Integer>> graphs = new ArrayList<>();
 
         try(Stream<String> stream = Files.lines(dataFile.toPath())) {
             stream
@@ -50,24 +48,25 @@ public class Task3 {
                     String[] numbers = line.split(" ");
                     int number1 = Integer.parseInt(numbers[0]);
                     int number2 = Integer.parseInt(numbers[1]);
-                    int graphOfNumber1 = 0;
-                    int graphOfNumber2 = 0;
-                    for(Map.Entry<Integer,Set<Integer>> graph: graphs.entrySet()) {
-                        if(graphOfNumber1 == 0 && graph.getValue().contains(number1)) {
-                            graphOfNumber1 = graph.getKey();
+                    int graphOfNumber1 = -1;
+                    int graphOfNumber2 = -1;
+                    for (int index = 0; index < graphs.size(); index++) {
+                        Set<Integer> graph = graphs.get(index);
+                        if (graphOfNumber1 == -1 && graph.contains(number1)) {
+                            graphOfNumber1 = index;
                         }
-                        if(graphOfNumber2 == 0 && graph.getValue().contains(number2)) {
-                            graphOfNumber2 = graph.getKey();
+                        if (graphOfNumber2 == -1 && graph.contains(number2)) {
+                            graphOfNumber2 = index;
                         }
-                        if(graphOfNumber1 != 0 && graphOfNumber2 != 0) {
+                        if (graphOfNumber1 != -1 && graphOfNumber2 != -1) {
                             break;
                         }
                     }
-                    if(graphOfNumber1 == 0 && graphOfNumber2 == 0) {
-                        graphs.put(keyGenerator.getAndIncrement(),new HashSet<>(Arrays.asList(number1,number2)));
-                    } else if(graphOfNumber1 == 0) {
+                    if(graphOfNumber1 == -1 && graphOfNumber2 == -1) {
+                        graphs.add(new HashSet<>(Arrays.asList(number1,number2)));
+                    } else if(graphOfNumber1 == -1) {
                         graphs.get(graphOfNumber2).add(number1);
-                    } else if(graphOfNumber2 == 0) {
+                    } else if(graphOfNumber2 == -1) {
                         graphs.get(graphOfNumber1).add(number2);
                     } else {
                         graphs.get(graphOfNumber1).addAll(graphs.remove(graphOfNumber2));
@@ -76,7 +75,7 @@ public class Task3 {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        System.out.println(graphs.keySet().size());
+        System.out.println(graphs.size());
     }
 
 }
