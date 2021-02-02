@@ -70,8 +70,7 @@ public class Task3 {
                     } else if(graphOfNumber2 == 0) {
                         graphs.get(graphOfNumber1).add(number2);
                     } else {
-                        graphs.get(graphOfNumber1).addAll(graphs.get(graphOfNumber2));
-                        graphs.remove(graphOfNumber2);
+                        graphs.get(graphOfNumber1).addAll(graphs.remove(graphOfNumber2));
                     }
                 });
         } catch (IOException e) {
